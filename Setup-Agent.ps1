@@ -117,6 +117,9 @@ function Process-SecurityEvent {
     
     if ($eventId -eq 4648) { $logonTypeRaw = "10" }
     
+    # Debug: Show what we're processing
+    Write-Host "  -> ID:$eventId User:$username Type:$logonTypeRaw" -ForegroundColor Gray
+    
     $skip = @("SYSTEM", "LOCAL SERVICE", "NETWORK SERVICE", "ANONYMOUS LOGON", "Window Manager", "Font Driver Host")
     if ($skip -contains $username) { return }
     if ($username -match '\$$') { return }
