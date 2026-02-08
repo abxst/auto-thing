@@ -198,7 +198,7 @@ try {
 function Show-Menu {
     Clear-Host
     Write-Host "=========================================" -ForegroundColor Cyan
-    Write-Host "  AssetsMan Login Agent Setup" -ForegroundColor Cyan
+    Write-Host "  AssetsMan Login Agent Setup  v1.3" -ForegroundColor Cyan
     Write-Host "=========================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  [1] Install Agent"
