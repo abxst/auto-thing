@@ -134,7 +134,7 @@ function Process-SecurityEvent {
 }
 
 Write-Host "========================================="
-Write-Host "  AssetsMan Login Agent v1.0"
+Write-Host "  AssetsMan Login Agent v1.1"
 Write-Host "========================================="
 Write-Host "API: $API_URL | Interval: ${CHECK_INTERVAL}s"
 Write-Host "-----------------------------------------"
