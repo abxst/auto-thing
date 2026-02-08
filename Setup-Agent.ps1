@@ -143,33 +143,43 @@ $lastHeartbeat = Get-Date
 
 Write-Host "Monitoring login/logout events..."
 
-while ($true) {
-    try {
-        $events = Get-WinEvent -FilterHashtable @{
-            LogName = 'Security'; ID = 4624, 4634, 4648; StartTime = $lastEventTime
-        } -MaxEvents 200 -ErrorAction Stop
-        
-        if ($events -and $events.Count -gt 0) {
-            foreach ($evt in ($events | Sort-Object TimeCreated)) {
-                if ($script:processedIds -contains $evt.RecordId) { continue }
-                Process-SecurityEvent -Event $evt
-                $script:processedIds += $evt.RecordId
-                if ($script:processedIds.Count -gt 100) { $script:processedIds = $script:processedIds[-100..-1] }
+try {
+    while ($true) {
+        try {
+            $events = Get-WinEvent -FilterHashtable @{
+                LogName = 'Security'
+                ID = 4624, 4634, 4648
+                StartTime = $lastEventTime
+            } -MaxEvents 200 -ErrorAction SilentlyContinue
+            
+            if ($events -and $events.Count -gt 0) {
+                $newCount = 0
+                foreach ($evt in ($events | Sort-Object TimeCreated)) {
+                    if ($script:processedIds -contains $evt.RecordId) { continue }
+                    $newCount++
+                    Process-SecurityEvent -Event $evt
+                    $script:processedIds += $evt.RecordId
+                    if ($script:processedIds.Count -gt 100) { $script:processedIds = $script:processedIds[-100..-1] }
+                }
+                if ($newCount -gt 0) {
+                    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Processed $newCount events" -ForegroundColor Cyan
+                }
+                $lastEventTime = ($events | Sort-Object TimeCreated -Descending | Select-Object -First 1).TimeCreated
             }
-            $lastEventTime = ($events | Sort-Object TimeCreated -Descending | Select-Object -First 1).TimeCreated
+        } catch {
+            Write-Host "[WARN] $($_.Exception.Message)" -ForegroundColor Yellow
         }
-    } catch {
-        if ($_.Exception.Message -notmatch "No events were found") {
-            Write-Host "[ERROR] $($_.Exception.Message)" -ForegroundColor Red
+        
+        if ((Get-Date) - $lastHeartbeat -gt [TimeSpan]::FromMinutes(1)) {
+            Send-Heartbeat
+            $lastHeartbeat = Get-Date
         }
+        
+        Start-Sleep -Seconds $CHECK_INTERVAL
     }
-    
-    if ((Get-Date) - $lastHeartbeat -gt [TimeSpan]::FromMinutes(1)) {
-        Send-Heartbeat
-        $lastHeartbeat = Get-Date
-    }
-    
-    Start-Sleep -Seconds $CHECK_INTERVAL
+} catch {
+    Write-Host "[FATAL] $($_.Exception.Message)" -ForegroundColor Red
+    Read-Host "Press Enter to exit"
 }
 '@
 #endregion
