@@ -134,7 +134,7 @@ function Process-SecurityEvent {
 }
 
 Write-Host "========================================="
-Write-Host "  AssetsMan Login Agent v1.3"
+Write-Host "  AssetsMan Login Agent v1.4"
 Write-Host "========================================="
 Write-Host "API: $API_URL | Interval: ${CHECK_INTERVAL}s"
 Write-Host "-----------------------------------------"
@@ -174,7 +174,8 @@ try {
                 } else {
                     Write-Host "  (all $($events.Count) already processed)" -ForegroundColor DarkGray
                 }
-                $lastEventTime = ($events | Sort-Object TimeCreated -Descending | Select-Object -First 1).TimeCreated
+                # Use current time instead of event's TimeCreated (timezone issues)
+                $lastEventTime = Get-Date
             }
         } catch {
             Write-Host "[WARN] $($_.Exception.Message)" -ForegroundColor Yellow
@@ -198,7 +199,7 @@ try {
 function Show-Menu {
     Clear-Host
     Write-Host "=========================================" -ForegroundColor Cyan
-    Write-Host "  AssetsMan Login Agent Setup  v1.3" -ForegroundColor Cyan
+    Write-Host "  AssetsMan Login Agent Setup  v1.4" -ForegroundColor Cyan
     Write-Host "=========================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  [1] Install Agent"
