@@ -134,7 +134,7 @@ function Process-SecurityEvent {
 }
 
 Write-Host "========================================="
-Write-Host "  AssetsMan Login Agent v1.2"
+Write-Host "  AssetsMan Login Agent v1.3"
 Write-Host "========================================="
 Write-Host "API: $API_URL | Interval: ${CHECK_INTERVAL}s"
 Write-Host "-----------------------------------------"
@@ -158,17 +158,21 @@ try {
             
             if ($events -and $events.Count -gt 0) {
                 Write-Host "" # newline
-                Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Found $($events.Count) events since $($lastEventTime.ToString('HH:mm:ss'))" -ForegroundColor DarkYellow
+                Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Query from $($lastEventTime.ToString('yyyy-MM-dd HH:mm:ss')) found $($events.Count)" -ForegroundColor DarkYellow
                 $newCount = 0
                 foreach ($evt in ($events | Sort-Object TimeCreated)) {
-                    if ($script:processedIds -contains $evt.RecordId) { continue }
-                    $newCount++
-                    Process-SecurityEvent -Event $evt
-                    $script:processedIds += $evt.RecordId
-                    if ($script:processedIds.Count -gt 100) { $script:processedIds = $script:processedIds[-100..-1] }
+                    $isNew = -not ($script:processedIds -contains $evt.RecordId)
+                    if ($isNew) {
+                        $newCount++
+                        Process-SecurityEvent -Event $evt
+                        $script:processedIds += $evt.RecordId
+                        if ($script:processedIds.Count -gt 100) { $script:processedIds = $script:processedIds[-100..-1] }
+                    }
                 }
                 if ($newCount -gt 0) {
                     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Processed $newCount NEW events" -ForegroundColor Cyan
+                } else {
+                    Write-Host "  (all $($events.Count) already processed)" -ForegroundColor DarkGray
                 }
                 $lastEventTime = ($events | Sort-Object TimeCreated -Descending | Select-Object -First 1).TimeCreated
             }
