@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 <#
 .SYNOPSIS
-    AssetsMan Login Agent - All-in-One Setup
+    AssetsMan Login Agent - All-in-One Setup v1.5
 
 .DESCRIPTION
     Single-file installer with embedded agent code.
@@ -9,9 +9,29 @@
     - Uninstall: Removes everything
     - Status: Check current installation
 
+.EXAMPLE
+    # Interactive mode
+    .\Setup-Agent.ps1
+
+    # Quick install via irm | iex
+    irm "http://YOUR-SERVER:10001/Setup-Agent.ps1" | iex
+
+    # Silent install with parameters
+    .\Setup-Agent.ps1 -Install -ApiUrl "http://server:10001/api/agent" -Token "your-token"
+
 .NOTES
-    Run as Administrator: .\Setup-Agent.ps1
+    Run as Administrator
 #>
+
+param(
+    [switch]$Install,
+    [switch]$Uninstall,
+    [switch]$Status,
+    [string]$ApiUrl,
+    [string]$Token,
+    [int]$Interval = 5,
+    [switch]$IgnoreSSL
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -134,7 +154,7 @@ function Process-SecurityEvent {
 }
 
 Write-Host "========================================="
-Write-Host "  AssetsMan Login Agent v1.4"
+Write-Host "  AssetsMan Login Agent v1.5"
 Write-Host "========================================="
 Write-Host "API: $API_URL | Interval: ${CHECK_INTERVAL}s"
 Write-Host "-----------------------------------------"
@@ -199,7 +219,7 @@ try {
 function Show-Menu {
     Clear-Host
     Write-Host "=========================================" -ForegroundColor Cyan
-    Write-Host "  AssetsMan Login Agent Setup  v1.4" -ForegroundColor Cyan
+    Write-Host "  AssetsMan Login Agent Setup  v1.5" -ForegroundColor Cyan
     Write-Host "=========================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  [1] Install Agent"
@@ -355,16 +375,37 @@ function Uninstall-Agent {
 #endregion
 
 # Main
-do {
-    Show-Menu
-    $sel = Read-Host "Select option"
-    switch ($sel.ToUpper()) {
-        "1" { Install-Agent }
-        "2" { Uninstall-Agent }
-        "3" { Show-Status }
-        "Q" { break }
-        default { Write-Host "Invalid option" -ForegroundColor Red; Start-Sleep 1 }
+# Check if running with command-line parameters (silent mode)
+if ($Install -or $Uninstall -or $Status) {
+    if ($Status) {
+        Show-Status
+    } elseif ($Uninstall) {
+        Uninstall-Agent
+    } elseif ($Install) {
+        # Use provided params or prompt
+        if ($ApiUrl -and $Token) {
+            $script:savedConfig = @{
+                api_url = $ApiUrl
+                token = $Token
+                check_interval_seconds = $Interval
+                ignore_ssl = $IgnoreSSL.IsPresent
+            } | ConvertTo-Json
+        }
+        Install-Agent
     }
-} while ($sel.ToUpper() -ne "Q")
+} else {
+    # Interactive menu mode
+    do {
+        Show-Menu
+        $sel = Read-Host "Select option"
+        switch ($sel.ToUpper()) {
+            "1" { Install-Agent }
+            "2" { Uninstall-Agent }
+            "3" { Show-Status }
+            "Q" { break }
+            default { Write-Host "Invalid option" -ForegroundColor Red; Start-Sleep 1 }
+        }
+    } while ($sel.ToUpper() -ne "Q")
 
-Write-Host "Goodbye!" -ForegroundColor Cyan
+    Write-Host "Goodbye!" -ForegroundColor Cyan
+}
