@@ -134,7 +134,7 @@ function Process-SecurityEvent {
 }
 
 Write-Host "========================================="
-Write-Host "  AssetsMan Login Agent v1.1"
+Write-Host "  AssetsMan Login Agent v1.2"
 Write-Host "========================================="
 Write-Host "API: $API_URL | Interval: ${CHECK_INTERVAL}s"
 Write-Host "-----------------------------------------"
@@ -149,6 +149,7 @@ Write-Host "Monitoring login/logout events..."
 try {
     while ($true) {
         try {
+            Write-Host "." -NoNewline -ForegroundColor DarkGray
             $events = Get-WinEvent -FilterHashtable @{
                 LogName = 'Security'
                 ID = 4624, 4634, 4648
@@ -156,6 +157,8 @@ try {
             } -MaxEvents 200 -ErrorAction SilentlyContinue
             
             if ($events -and $events.Count -gt 0) {
+                Write-Host "" # newline
+                Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Found $($events.Count) events since $($lastEventTime.ToString('HH:mm:ss'))" -ForegroundColor DarkYellow
                 $newCount = 0
                 foreach ($evt in ($events | Sort-Object TimeCreated)) {
                     if ($script:processedIds -contains $evt.RecordId) { continue }
@@ -165,7 +168,7 @@ try {
                     if ($script:processedIds.Count -gt 100) { $script:processedIds = $script:processedIds[-100..-1] }
                 }
                 if ($newCount -gt 0) {
-                    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Processed $newCount events" -ForegroundColor Cyan
+                    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Processed $newCount NEW events" -ForegroundColor Cyan
                 }
                 $lastEventTime = ($events | Sort-Object TimeCreated -Descending | Select-Object -First 1).TimeCreated
             }
