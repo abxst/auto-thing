@@ -129,7 +129,7 @@ install_dokploy() {
     #===============================================
     # Postgres
     #===============================================
-    docker pull postgres:18
+    #docker pull postgres:18
     docker service create \
     --name dokploy-postgres \
     --constraint 'node.role==manager' \
@@ -140,12 +140,12 @@ install_dokploy() {
     --env POSTGRES_PASSWORD=amukds4wi9001583845717ad2 \
     --mount type=volume,source=dokploy-postgres,target=/var/lib/postgresql/data \
     $endpoint_mode \
-    postgres:18
+    postgres:17-alpine
 
     #===============================================
     # Redis-Valkey
     #===============================================
-    docker pull valkey/valkey:9-alpine
+    #docker pull valkey/valkey:9-alpine
     docker service create \
     --name dokploy-redis \
     --constraint 'node.role==manager' \
@@ -183,7 +183,7 @@ install_dokploy() {
     #===============================================
     # Traefik
     #===============================================
-    docker pull traefik:v3.7.1
+    #docker pull traefik:v3.7.1
        docker service create \
          --name dokploy-traefik \
          --constraint 'node.role==manager' \
