@@ -172,7 +172,7 @@ install_dokploy() {
       --mount type=volume,source=dokploy,target=/root/.docker \
       --publish published=10000,target=3000,mode=host \
       --update-parallelism 1 \
-      --update-order start-first \
+      --update-order stop-first \
       --constraint 'node.role == manager' \
       $endpoint_mode \
       $release_tag_env \
