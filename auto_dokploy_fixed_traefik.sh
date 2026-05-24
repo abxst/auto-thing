@@ -193,7 +193,7 @@ install_dokploy() {
          --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock \
          --publish mode=host,published=443,target=443 \
          --publish mode=host,published=80,target=80 \
-         --update-order start-first \
+         --update-order stop-first \
          --restart-condition on-failure \
          --publish mode=host,published=443,target=443,protocol=udp \
          traefik:v3.7.1
